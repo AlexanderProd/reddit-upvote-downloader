@@ -71,12 +71,6 @@ const uploadMega = dest => {
   });
 };
 
-const filterPosts = data => {
-  if (data.post_hint === 'image') return true;
-
-  return false;
-};
-
 const downloadAndUpload = async url => {
   const filename = getFileName(url);
   const dest = `${TMP}/${filename}`;
