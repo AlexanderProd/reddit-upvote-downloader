@@ -18,36 +18,40 @@ const getFileName = url => {
   return url.substring(url.lastIndexOf('/') + 1);
 };
 
-const download = async (url, dest) => {
-  const res = await fetch(url);
+const download = async (url, dest) => (
+  new Promise((resolve, reject) => {
+    try {
+      const res = await fetch(url);
+      const fileStream = createWriteStream(dest, { flags: 'wx' });
 
-  return new Promise((resolve, reject) => {
-    const fileStream = createWriteStream(dest, { flags: 'wx' });
-    res.body.pipe(fileStream);
-
-    res.body.on('error', err => {
-      fileStream.close();
-      unlink(dest);
-      reject(err);
-    });
-
-    fileStream.on('finish', function () {
-      fileStream.close();
-      resolve();
-    });
-
-    fileStream.on('error', err => {
-      fileStream.close();
-
-      if (err.code === 'EEXIST') {
-        reject('File already exists');
-      } else {
+      res.body.pipe(fileStream);
+  
+      res.body.on('error', err => {
+        fileStream.close();
         unlink(dest);
         reject(err);
-      }
-    });
-  });
-};
+      });
+  
+      fileStream.on('finish', () => {
+        fileStream.close();
+        resolve();
+      });
+  
+      fileStream.on('error', err => {
+        fileStream.close();
+  
+        if (err.code === 'EEXIST') {
+          reject('File already exists');
+        } else {
+          unlink(dest);
+          reject(err);
+        }
+      });
+    } catch (error) {
+      reject(error)
+    }
+  })
+);
 
 const uploadMega = dest => {
   return new Promise((resolve, reject) => {
