@@ -1,6 +1,5 @@
 const { mkdirSync, existsSync, createWriteStream, unlink } = require('fs');
 const { exec } = require('child_process');
-const https = require('https');
 const UpvoteWatcher = require('./watcher');
 const fetch = require('node-fetch');
 
@@ -19,39 +18,31 @@ const getFileName = url => {
   return url.substring(url.lastIndexOf('/') + 1);
 };
 
-const downloadFile = (url, dest) => {
+const download = async (url, dest) => {
+  const res = await fetch(url);
+
   return new Promise((resolve, reject) => {
-    const file = createWriteStream(dest, { flags: 'wx' });
+    const fileStream = createWriteStream(dest, { flags: 'wx' });
+    res.body.pipe(fileStream);
 
-    const request = https.get(url, response => {
-      if (response.statusCode === 200) {
-        response.pipe(file);
-      } else {
-        file.close();
-        unlink(dest); // Delete temp file
-        reject(
-          `Server responded with ${response.statusCode}: ${response.statusMessage}`
-        );
-      }
-    });
-
-    request.on('error', err => {
-      file.close();
-      unlink(dest); // Delete temp file
+    res.body.on('error', err => {
+      fileStream.close();
+      unlink(dest);
       reject(err);
     });
 
-    file.on('finish', () => {
+    fileStream.on('finish', function () {
+      fileStream.close();
       resolve();
     });
 
-    file.on('error', err => {
-      file.close();
+    fileStream.on('error', err => {
+      fileStream.close();
 
       if (err.code === 'EEXIST') {
         reject('File already exists');
       } else {
-        unlink(dest); // Delete temp file
+        unlink(dest);
         reject(err);
       }
     });
@@ -76,7 +67,7 @@ const downloadAndUpload = async url => {
   const dest = `${TMP}/${filename}`;
 
   try {
-    await downloadFile(url, dest);
+    await download(url, dest);
     await uploadMega(dest);
     unlink(dest, error => {
       if (error) console.error(error);
