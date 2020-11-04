@@ -15,13 +15,14 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     this.seenItems = [];
     this.seenItemsSize = 20;
     this.firstRun = true;
+    this.numberOfTries = 3;
 
     this.once('newListener', (event, listener) => {
       this.start();
     });
   }
 
-  async getToken(retries = 3) {
+  async getToken(retries = this.numberOfTries) {
     const { username, password, appId, apiSecret, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -61,7 +62,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     });
   }
 
-  async getItems(retries = 3) {
+  async getItems(retries = this.numberOfTries) {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {

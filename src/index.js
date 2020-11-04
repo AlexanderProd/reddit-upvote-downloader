@@ -90,7 +90,7 @@ const handleImgurAlbum = async url => {
   json.data.forEach(image => downloadAndUpload(image.link));
 };
 
-const downloader = async data => {
+const filterPosts = async data => {
   const { post_hint, url } = data;
 
   if (post_hint === 'self') return;
@@ -123,7 +123,10 @@ const downloader = async data => {
     console.log(data.url);
     console.log('');
 
-    downloader(data);
+    filterPosts(data);
   });
-  watcher.on('error', error => console.error(error));
+  watcher.on('error', error => {
+    console.error(error);
+    process.exit(1);
+  });
 })();
