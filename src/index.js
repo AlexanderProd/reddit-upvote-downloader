@@ -3,9 +3,8 @@ const { exec } = require('child_process');
 const UpvoteWatcher = require('./watcher');
 const fetch = require('node-fetch');
 
-const { reddit, imgur } = require('../config.json');
+const { reddit, imgur, MEGA_PATH } = require('../config.json');
 const watcher = new UpvoteWatcher(reddit);
-const MEGA_PATH = '/Bilder';
 const TMP = '../tmp';
 
 const init = () => {
