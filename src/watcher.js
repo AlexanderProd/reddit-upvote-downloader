@@ -58,42 +58,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
           return this.getToken(retries - 1);
         }
       }
-
-      /* request.post(
-        {
-          url: 'https://www.reddit.com/api/v1/access_token',
-          form: {
-            grant_type: 'password',
-            username: username,
-            password: password,
-          },
-          auth: {
-            user: appId,
-            pass: apiSecret,
-          },
-          headers: {
-            'User-Agent': useragent,
-          },
-        },
-        (err, res, body) => {
-          if (err && retries <= 0) {
-            reject(err);
-          } else if (err) {
-            return this.getToken(retries - 1);
-          }
-
-          const tokenInfo = JSON.parse(body);
-
-          this.tokenExpiration = Date.now() / 1000 + tokenInfo.expires_in / 2;
-          this.token = tokenInfo.token_type + ' ' + tokenInfo.access_token;
-
-          resolve(this.token);
-        }
-      ); */
     });
   }
 
-  async getItems(options) {
+  async getItems(retries = 3) {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -102,7 +70,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         Authorization: this.token,
         'User-Agent': useragent,
       };
-      const params = new URLSearchParams(options ? options : { limit: 10 });
+      const params = new URLSearchParams({ limit: 10 });
 
       try {
         const res = await fetch(url + params, { headers });
@@ -110,7 +78,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(json);
       } catch (error) {
-        reject(error);
+        if (error && retries <= 0) {
+          reject(error);
+        }
+        this.getItems(retries - 1);
       }
     });
   }
