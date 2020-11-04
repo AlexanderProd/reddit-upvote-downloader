@@ -75,6 +75,12 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { headers });
+        /* Debugging */
+        if (
+          res.headers.get('content-type') !== 'application/json; charset=UTF-8'
+        ) {
+          console.log(await res.text());
+        }
         const json = await res.json();
 
         resolve(json);
