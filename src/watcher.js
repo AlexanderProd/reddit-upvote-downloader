@@ -81,6 +81,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         ) {
           console.log(await res.text());
         }
+        if (res.status !== 200) {
+          this.getItems(retries - 1);
+        }
+
         const json = await res.json();
 
         resolve(json);
