@@ -75,25 +75,17 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { headers });
-        /* Debugging */
-        if (
-          res.headers.get('content-type') !== 'application/json; charset=UTF-8'
-        ) {
-          console.log(await res.text());
-        }
         if (res.status !== 200) {
-          console.log('retry in getItems()');
-          this.getItems(retries - 1);
+          if (retries === 0) reject(new Error('Status code: ' + res.status));
+          await this.getItems(retries - 1);
         }
 
         const json = await res.json();
 
         resolve(json);
       } catch (error) {
-        if (error && retries <= 0) {
-          reject(error);
-        }
-        this.getItems(retries - 1);
+        reject(error);
+        return await this.getItems(retries - 1);
       }
     });
   }
