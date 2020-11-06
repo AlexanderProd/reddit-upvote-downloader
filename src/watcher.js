@@ -53,11 +53,8 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(this.token);
       } catch (error) {
-        if (error && retries <= 0) {
-          reject(error);
-        } else {
-          return this.getToken(retries - 1);
-        }
+        if (retries === 0) reject(error);
+        return await this.getToken(retries - 1);
       }
     });
   }
@@ -84,7 +81,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(json);
       } catch (error) {
-        reject(error);
+        if (retries === 0) reject(error);
         return await this.getItems(retries - 1);
       }
     });
