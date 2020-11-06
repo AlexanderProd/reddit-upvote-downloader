@@ -82,6 +82,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
           console.log(await res.text());
         }
         if (res.status !== 200) {
+          console.log('retry in getItems()');
           this.getItems(retries - 1);
         }
 
