@@ -103,7 +103,8 @@ const filterPosts = async data => {
   // Imgur GIF
   if (post_hint === 'link') {
     if (url.includes('imgur')) {
-      if (url.includes(['.gifv', '.gif'])) {
+      if (url.includes(['.gifv'])) {
+        downloadAndUpload(url.replace('.gifv', '.mp4'));
       }
 
       if (url.includes('/a/')) {
