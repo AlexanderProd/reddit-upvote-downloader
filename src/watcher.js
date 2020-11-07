@@ -50,7 +50,9 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         const res = await fetch(url + params, { method: 'POST', headers });
         console.log('Status in getToken()' + res.status);
         if (res.status !== 200) {
-          console.log(await res.text());
+          if (retries === 0) reject(new Error(await res.text()));
+          sleep(3000);
+          return await this.getToken(retries - 1);
         }
         const tokenInfo = await res.json();
 
