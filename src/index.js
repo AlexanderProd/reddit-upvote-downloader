@@ -106,7 +106,6 @@ const filterPosts = data => {
     return downloadAndUpload(url);
   }
 
-  // Imgur GIF
   if (post_hint === 'link') {
     if (url.includes('imgur')) {
       if (url.includes(['.gifv'])) {
@@ -136,6 +135,7 @@ const filterPosts = data => {
 
     filterPosts(data);
   });
+
   watcher.on('error', error => {
     console.error(error);
     process.exit(1);
