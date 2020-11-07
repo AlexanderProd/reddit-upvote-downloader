@@ -1,6 +1,8 @@
 const EventEmitter = require('events');
 const fetch = require('node-fetch');
 
+const sleep = t => new Promise(resolve => setTimeout(resolve, t));
+
 module.exports = class UpvoteWatcher extends EventEmitter {
   constructor(options) {
     super();
@@ -77,6 +79,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         if (res.status !== 200) {
           if (retries === 0) reject(new Error('Status code: ' + res.status));
           console.log('retry in getItems');
+          sleep(3000);
           return await this.getItems(retries - 1);
         }
 
@@ -86,6 +89,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
       } catch (error) {
         if (retries === 0) reject(error);
         console.log('retry in getItems');
+        sleep(3000);
         return await this.getItems(retries - 1);
       }
     });

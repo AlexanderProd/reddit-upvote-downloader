@@ -13,9 +13,7 @@ const init = () => {
   }
 };
 
-const getFileName = url => {
-  return url.substring(url.lastIndexOf('/') + 1);
-};
+const getFileName = url => url.substring(url.lastIndexOf('/') + 1);
 
 const download = (url, dest) =>
   new Promise(async (resolve, reject) => {
