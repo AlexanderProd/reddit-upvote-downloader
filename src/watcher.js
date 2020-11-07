@@ -72,6 +72,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { headers });
+        console.log(res.status);
         if (res.status !== 200) {
           if (retries === 0) reject(new Error('Status code: ' + res.status));
           await this.getItems(retries - 1);
