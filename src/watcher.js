@@ -56,6 +56,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         resolve(this.token);
       } catch (error) {
         if (retries === 0) reject(error);
+        console.error(error);
         console.log('retry in getToken');
         return await this.getToken(retries - 1);
       }
