@@ -77,14 +77,16 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
-      const url = new URL(`https://oauth.reddit.com/user/${username}/upvoted?`);
-      const headers = {
-        Authorization: this.token,
-        'User-Agent': useragent,
-      };
-      const params = new URLSearchParams({ limit: 10 });
-
       try {
+        const url = new URL(
+          `https://oauth.reddit.com/user/${username}/upvoted?`
+        );
+        const headers = {
+          Authorization: await this.getToken(),
+          'User-Agent': useragent,
+        };
+        const params = new URLSearchParams({ limit: 10 });
+
         const res = await fetch(url + params, { headers });
         if (res.status !== 200) {
           console.log('Status in getItems', res.status);
@@ -114,7 +116,6 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
     setTimeout(async () => {
       try {
-        await this.getToken();
         const { data } = await this.getItems();
         const { children } = data;
 
