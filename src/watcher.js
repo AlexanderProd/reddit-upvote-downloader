@@ -48,9 +48,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { method: 'POST', headers });
-        console.log('Status in getToken()' + res.status);
         if (res.status !== 200) {
+          console.log('Status in getToken', res.status);
           if (retries === 0) reject(new Error(await res.text()));
+          console.log('retry in getToken');
           sleep(3000);
           return await this.getToken(retries - 1);
         }
@@ -82,8 +83,8 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { headers });
-        console.log(res.status);
         if (res.status !== 200) {
+          console.log('Status in getItems', res.status);
           if (retries === 0) reject(new Error('Status code: ' + res.status));
           console.log('retry in getItems');
           sleep(3000);
