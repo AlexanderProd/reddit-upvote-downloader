@@ -24,7 +24,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     });
   }
 
-  async getToken(retry = 0) {
+  async getToken(retry = 1) {
     const { username, password, appId, apiSecret, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -75,7 +75,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     });
   }
 
-  async getItems(retry = 0) {
+  async getItems(retry = 1) {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
