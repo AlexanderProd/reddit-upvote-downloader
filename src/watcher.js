@@ -52,6 +52,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
           console.log('Status in getToken', res.status);
           if (retry === this.numberOfTries) reject(new Error(await res.text()));
           console.log('Retry because status is not 200 in getToken');
+          console.log('retry number', retry);
           console.log('sleeping for', 3000 * retry);
           await sleep(3000 * retry);
           return await this.getToken(retry + 1);
@@ -63,9 +64,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(this.token);
       } catch (error) {
-        if (retry === this.numberOfTries) reject(error);
+        if (retry >= this.numberOfTries) reject(error);
         console.error(error);
         console.log('retry because of error in getToken');
+        console.log('retry number', retry);
         console.log('sleeping for', 3000 * retry);
         await sleep(3000 * retry);
         return await this.getToken(retry + 1);
@@ -90,9 +92,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         const res = await fetch(url + params, { headers });
         if (res.status !== 200) {
           console.log('Status in getItems', res.status);
-          if (retry === this.numberOfTries)
+          if (retry >= this.numberOfTries)
             reject(new Error('Status code: ' + res.status));
           console.log('retry in getItems');
+          console.log('retry number', retry);
           console.log('sleeping for', 3000 * retry);
           await sleep(3000 * retry);
           return await this.getItems(retry + 1);
@@ -104,6 +107,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
       } catch (error) {
         if (retry === this.numberOfTries) reject(error);
         console.log('retry in getItems');
+        console.log('retry number', retry);
         console.log('sleeping for', 3000 * retry);
         await sleep(3000 * retry);
         return await this.getItems(retry + 1);
