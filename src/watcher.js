@@ -1,6 +1,8 @@
 const EventEmitter = require('events');
 const fetch = require('node-fetch');
 
+const sleep = t => new Promise(resolve => setTimeout(resolve, t));
+
 module.exports = class UpvoteWatcher extends EventEmitter {
   constructor(options) {
     super();
@@ -15,14 +17,13 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     this.seenItems = [];
     this.seenItemsSize = 20;
     this.firstRun = true;
-    this.numberOfTries = 3;
 
     this.once('newListener', (event, listener) => {
       this.start();
     });
   }
 
-  async getToken(retries = this.numberOfTries) {
+  async getToken() {
     const { username, password, appId, apiSecret, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -46,6 +47,10 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
       try {
         const res = await fetch(url + params, { method: 'POST', headers });
+        if (res.status !== 200) {
+          console.log('Status in getToken', res.status);
+          return this.start();
+        }
         const tokenInfo = await res.json();
 
         this.tokenExpiration = Date.now() / 1000 + tokenInfo.expires_in / 2;
@@ -53,42 +58,38 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(this.token);
       } catch (error) {
-        if (error && retries <= 0) {
-          reject(error);
-        } else {
-          return this.getToken(retries - 1);
-        }
+        console.error(error);
+        return this.start();
       }
     });
   }
 
-  async getItems(retries = this.numberOfTries) {
+  async getItems(retry = 0) {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
-      const url = new URL(`https://oauth.reddit.com/user/${username}/upvoted?`);
-      const headers = {
-        Authorization: this.token,
-        'User-Agent': useragent,
-      };
-      const params = new URLSearchParams({ limit: 10 });
-
       try {
+        const url = new URL(
+          `https://oauth.reddit.com/user/${username}/upvoted?`
+        );
+        const headers = {
+          Authorization: await this.getToken(),
+          'User-Agent': useragent,
+        };
+        const params = new URLSearchParams({ limit: 10 });
+
         const res = await fetch(url + params, { headers });
-        /* Debugging */
-        if (
-          res.headers.get('content-type') !== 'application/json; charset=UTF-8'
-        ) {
-          console.log(await res.text());
+        if (res.status !== 200) {
+          console.log('Status in getItems', res.status);
+          return this.start();
         }
+
         const json = await res.json();
 
         resolve(json);
       } catch (error) {
-        if (error && retries <= 0) {
-          reject(error);
-        }
-        this.getItems(retries - 1);
+        console.error(error);
+        return this.start();
       }
     });
   }
@@ -98,7 +99,6 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
     setTimeout(async () => {
       try {
-        await this.getToken();
         const { data } = await this.getItems();
         const { children } = data;
 

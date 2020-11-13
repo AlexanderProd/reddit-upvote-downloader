@@ -13,9 +13,7 @@ const init = () => {
   }
 };
 
-const getFileName = url => {
-  return url.substring(url.lastIndexOf('/') + 1);
-};
+const getFileName = url => url.substring(url.lastIndexOf('/') + 1);
 
 const download = (url, dest) =>
   new Promise(async (resolve, reject) => {
@@ -64,9 +62,8 @@ const uploadMega = dest => {
   });
 };
 
-const downloadAndUpload = async url => {
-  const filename = getFileName(url);
-  const dest = `${TMP}/${filename}`;
+const downloadAndUpload = async (url, filename) => {
+  const dest = `${TMP}/${filename ? filename : getFileName(url)}`;
 
   try {
     await download(url, dest);
@@ -90,26 +87,37 @@ const handleImgurAlbum = async url => {
   json.data.forEach(image => downloadAndUpload(image.link));
 };
 
-const filterPosts = async data => {
+const handleRedditVideo = async data => {
+  const url = data.media.reject.fallback_url;
+  const filename = `${data.id}.mp4`;
+
+  downloadAndUpload(url, filename);
+};
+
+const filterPosts = data => {
   const { post_hint, url } = data;
 
+  //Text Post
   if (post_hint === 'self') return;
 
-  // Image
   if (post_hint === 'image') {
-    downloadAndUpload(url);
+    return downloadAndUpload(url);
   }
 
-  // Imgur GIF
   if (post_hint === 'link') {
     if (url.includes('imgur')) {
-      if (url.includes(['.gifv', '.gif'])) {
+      if (url.includes(['.gifv'])) {
+        return downloadAndUpload(url.replace('.gifv', '.mp4'));
       }
 
       if (url.includes('/a/')) {
-        handleImgurAlbum(url);
+        return handleImgurAlbum(url);
       }
     }
+  }
+
+  if (post_hint === 'hosted:video') {
+    return handleRedditVideo(data);
   }
 };
 
@@ -125,6 +133,7 @@ const filterPosts = async data => {
 
     filterPosts(data);
   });
+
   watcher.on('error', error => {
     console.error(error);
     process.exit(1);
