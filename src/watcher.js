@@ -17,14 +17,13 @@ module.exports = class UpvoteWatcher extends EventEmitter {
     this.seenItems = [];
     this.seenItemsSize = 20;
     this.firstRun = true;
-    this.numberOfTries = 10;
 
     this.once('newListener', (event, listener) => {
       this.start();
     });
   }
 
-  async getToken(retry = 1) {
+  async getToken() {
     const { username, password, appId, apiSecret, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -50,11 +49,6 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         const res = await fetch(url + params, { method: 'POST', headers });
         if (res.status !== 200) {
           console.log('Status in getToken', res.status);
-          if (retry >= this.numberOfTries) reject(new Error(await res.text()));
-          console.log('Retry because status is not 200 in getToken');
-          console.log('retry number', retry);
-          console.log('sleeping for', 3000 * retry);
-          await sleep(3000 * retry);
           return this.start();
         }
         const tokenInfo = await res.json();
@@ -64,18 +58,13 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(this.token);
       } catch (error) {
-        if (retry >= this.numberOfTries) reject(error);
         console.error(error);
-        console.log('retry because of error in getToken');
-        console.log('retry number', retry);
-        console.log('sleeping for', 3000 * retry);
-        await sleep(3000 * retry);
         return this.start();
       }
     });
   }
 
-  async getItems(retry = 1) {
+  async getItems(retry = 0) {
     const { username, useragent } = this.options;
 
     return new Promise(async (resolve, reject) => {
@@ -92,12 +81,6 @@ module.exports = class UpvoteWatcher extends EventEmitter {
         const res = await fetch(url + params, { headers });
         if (res.status !== 200) {
           console.log('Status in getItems', res.status);
-          if (retry >= this.numberOfTries)
-            reject(new Error('Status code: ' + res.status));
-          console.log('retry in getItems');
-          console.log('retry number', retry);
-          console.log('sleeping for', 3000 * retry);
-          await sleep(3000 * retry);
           return this.start();
         }
 
@@ -105,11 +88,7 @@ module.exports = class UpvoteWatcher extends EventEmitter {
 
         resolve(json);
       } catch (error) {
-        if (retry >= this.numberOfTries) reject(error);
-        console.log('retry in getItems');
-        console.log('retry number', retry);
-        console.log('sleeping for', 3000 * retry);
-        await sleep(3000 * retry);
+        console.error(error);
         return this.start();
       }
     });
